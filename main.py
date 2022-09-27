@@ -1,6 +1,7 @@
 from gameboard import GameBoard
 from hex import Hex
-from player import Player, Tree
+from player import Player
+from tree import Tree
 
 
 def main():
