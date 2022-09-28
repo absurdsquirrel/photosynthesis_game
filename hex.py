@@ -15,15 +15,11 @@ class Hex:
 
     def __post_init__(self):
         if sum((self.q, self.r, self.s)) != 0:
-            raise ValueError(f"Hex coordinates must sum to 0.")
-
-    @property
-    def soil_value(self) -> int:
-        # TODO: this belong in a subclass for Photosynthesis
-        return 4 - len(self)
+            raise ValueError(f"Hex coordinates must sum to 0: {self.q, self.r, self.s}")
 
     def __add__(self, other: Hex) -> Hex:
-        assert isinstance(other, Hex)
+        if not isinstance(other, Hex):
+            raise ValueError(f"addition undefined between Hex and {type(other)}")
         return Hex(
             self.q + other.q,
             self.r + other.r,
@@ -31,7 +27,8 @@ class Hex:
         )
 
     def __sub__(self, other: Hex) -> Hex:
-        assert isinstance(other, Hex)
+        if not isinstance(other, Hex):
+            raise ValueError(f"subtraction undefined between Hex and {type(other)}")
         return Hex(
             self.q - other.q,
             self.r - other.r,
@@ -42,7 +39,8 @@ class Hex:
         return (abs(self.q) + abs(self.r) + abs(self.s)) // 2
 
     def distance(self, other: Hex):
-        assert isinstance(other, Hex)
+        if not isinstance(other, Hex):
+            raise ValueError(f"distance undefined between Hex and {type(other)}")
         return len(self - other)
 
     def neighbors(self) -> list[Hex]:

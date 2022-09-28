@@ -1,27 +1,14 @@
-from gameboard import GameBoard
-from hex import Hex
-from player import Player
-from tree import Tree
+from photosynthesis_game import PhotosynthesisBoard
+from collections import Counter
 
 
 def main():
-    gb = GameBoard()
-    player1 = Player('Player 1')
-    tile = Hex(0, 0, 0)
-    gb.tiles[tile] = Tree(player1, 3)
-    hd = gb.sun_direction
-    tile1 = tile + hd
-    tile2 = tile - hd
-    for i in range(2, -1, -1):
-        gb.tiles[tile1] = Tree(player1, i)
-        gb.tiles[tile2] = Tree(player1, i)
-        tile1 = tile1 + hd
-        tile2 = tile2 - hd
-
-    for tile, tree in gb.tiles.items():
-        if not tree:
-            continue
-        print(f"{tile, tree.height} in shadow? {gb.is_in_shadow(tile)}")
+    gb = PhotosynthesisBoard()
+    assert len(gb.tiles) == 37, f"{len(gb.tiles)}"
+    assert all(len(tile) < 4 for tile in gb.tiles)
+    c = Counter([len(tile) for tile in gb.tiles])
+    print(c)
+    assert all(c[i] == max(1, 6 * i) for i in range(4))
 
 
 if __name__ == '__main__':
