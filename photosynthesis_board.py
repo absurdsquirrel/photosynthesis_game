@@ -35,17 +35,27 @@ class PhotosynthesisBoard(GameBoard):
                 return True
         return False
 
-    def get_tile(self, tile: Hex) -> tuple[Player | None, int | None]:
-        if len(tile) > 3:
+    def get_tile(
+            self, tile: Hex
+    ) -> tuple[Player, int] | tuple[None, None]:
+        if tile not in self.tiles:
             raise ValueError(f"{tile} is not on the board.")
         if not self.tiles[tile]:
             return None, None
         return self.tiles[tile]
 
-    def set_tile(self, tile: Hex, player: Player, tree: int) -> None:
-        if len(tile) > 3:
+    def set_tile(
+            self,
+            tile: Hex,
+            player: Player | None,
+            tree: int | None
+    ) -> None:
+        if tile not in self.tiles:
             raise ValueError(f"{tile} is not on the board.")
-        self.tiles[tile] = (player, tree)
+        if not player or tree is None:
+            self.tiles[tile] = None
+        else:
+            self.tiles[tile] = (player, tree)
 
     def get_player_tiles(self, player: Player) -> list[tuple[Hex, int]]:
         return [

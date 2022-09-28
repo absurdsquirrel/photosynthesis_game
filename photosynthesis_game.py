@@ -10,7 +10,7 @@ from player_board import PlayerBoard
 
 
 # this is probably unnecessary, but it's a helpful reference
-class Tree(IntEnum):
+class TREE(IntEnum):
     SEED = 0
     SMALL = 1
     MEDIUM = 2
@@ -57,7 +57,12 @@ class PhotosynthesisGame:
                 if tree and not self.board.is_in_shadow(tile)
             ])
 
-    def score_points(self, player: Player, tile: Hex) -> None:
+    def collect(self, player: Player, tile: Hex) -> None:
+        p, t = self.board.get_tile(tile)
+        if p is not player:
+            raise ValueError(f"{player} does not control {tile}")
+        if t is None or t < 3:
+            raise ValueError(f"{tile} does not have a tall tree.")
         soil_quality = len(tile)
         while not self.scoring_tokens[soil_quality] and soil_quality < 4:
             soil_quality += 1
@@ -65,6 +70,8 @@ class PhotosynthesisGame:
             raise ValueError("Ran out of score tokens.")
         points = self.scoring_tokens[soil_quality].pop()
         player.player_board.score += points
+        self.board.set_tile(tile, None, None)
+        player.player_board.recover_tree(TREE.TALL)
 
     def life_cycle(self, player: Player) -> None:
         activated_tiles: set[Hex] = set()
