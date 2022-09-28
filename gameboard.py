@@ -20,3 +20,5 @@ class GameBoard:
                 for _ in range(i):
                     tile = tile + hd
                     self.tiles[tile] = None
+
+    # TODO: get tiles in a range, and other ways?

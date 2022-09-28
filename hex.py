@@ -46,6 +46,13 @@ class Hex:
     def neighbors(self) -> list[Hex]:
         return [self + hd for hd in HEX_DIRECTIONS]
 
+    @staticmethod
+    def hex_from_str(qrs: str) -> Hex:
+        """Create a hex from a string in the form 'q, r, s'"""
+        q, r, s, *_ = qrs.strip().split(',')
+        q, r, s = int(q), int(r), int(s)
+        return Hex(q, r, s)
+
 
 # directions & diagonals start E/ENE of the r=0 line and go CCW
 HEX_DIRECTIONS = (
