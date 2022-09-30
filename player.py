@@ -66,9 +66,8 @@ class Player:
         self._available[tree] -= 1
 
     def recover_tree(self, tree: int) -> None:
-        self._trees[tree] += 1
         self._trees[tree] = min(
-            self._trees[tree],
+            self._trees[tree] + 1,
             len(Player.TREE_PRICES[tree])
         )
 

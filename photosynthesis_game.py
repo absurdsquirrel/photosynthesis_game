@@ -130,9 +130,9 @@ class PhotosynthesisGame:
         if player.light_points < 1:
             unable = f"{player} has no light."
         legal_sources = {
-            tile for tile in self.board.get_player_tiles(
+            tile for tile, _ in self.board.get_player_tiles(
                 player,
-                tree_range=range(1, 4),
+                tree_range=range(1, max(TREE) + 1),
                 not_in_shadow=not self.can_activate_in_shade
             )
             if tile not in activated_tiles
@@ -150,6 +150,7 @@ class PhotosynthesisGame:
             tile for tile in self.board.get_empty_tiles_in_range(
                 source, range(1, tree + 1)
             )
+            if tile not in activated_tiles
         }
         if not legal_targets:
             self.ui.display_message(f"No open spaces in range of that tree.")
@@ -159,10 +160,42 @@ class PhotosynthesisGame:
             return
         player.light_points -= 1
         player.use_available(TREE.SEED)
+        activated_tiles.add(source)
+        activated_tiles.add(target)
         self.board.set_tile(target, player, TREE.SEED)
 
     def grow(self, player: Player, activated_tiles: set[Hex]) -> None:
-        ...
+        unable = None
+        available_trees = {
+            tree for tree in TREE
+            if 0 < tree <= player.light_points
+            and player.available[tree] > 0
+        }
+        if not available_trees:
+            unable = f"{player} has no available trees or not enough light."
+        legal_options = {
+            tile for tile, tree in self.board.get_player_tiles(
+                player,
+                tree_range=range(max(available_trees)),
+                not_in_shadow=not self.can_activate_in_shade
+            )
+            if tree + 1 in available_trees
+            and tile not in activated_tiles
+        }
+        if not legal_options:
+            unable = f"{player} has not trees that can be grown."
+        if unable:
+            self.ui.display_message(unable)
+            return
+        tile = self.ui.prompt_for_hex(player, legal_options)
+        if tile is None:
+            return
+        _, tree = self.board.get_tile(tile)
+        player.light_points -= tree + 1
+        player.use_available(tree + 1)
+        player.recover_tree(tree)
+        self.board.set_tile(tile, player, tree + 1)
+        activated_tiles.add(tile)
 
     def life_cycle(self, player: Player) -> None:
         action_prompt = f"""
