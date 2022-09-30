@@ -17,6 +17,9 @@ class Hex:
         if sum((self.q, self.r, self.s)) != 0:
             raise ValueError(f"Hex coordinates must sum to 0: {self.q, self.r, self.s}")
 
+    def __iter__(self):
+        return iter((self.q, self.r, self.s))
+
     def __add__(self, other: Hex) -> Hex:
         if not isinstance(other, Hex):
             raise ValueError(f"addition undefined between Hex and {type(other)}")
@@ -48,7 +51,10 @@ class Hex:
 
     @staticmethod
     def hex_from_str(qrs: str) -> Hex:
-        """Create a hex from a string in the form 'q, r, s'"""
+        """
+        Create a hex from a string in the form 'q, r, s'
+        Raises ValueError if the input is bad or is not a valid Hex
+        """
         q, r, s, *_ = qrs.strip().split(',')
         q, r, s = int(q), int(r), int(s)
         return Hex(q, r, s)

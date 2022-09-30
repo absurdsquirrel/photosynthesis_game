@@ -33,6 +33,5 @@ class CLI:
                     (expected is not None and response in expected) or
                     (validator is not None and validator(response))
             ):
-                break
+                return response
             print("*Invalid response. Try again.*")
-        return response

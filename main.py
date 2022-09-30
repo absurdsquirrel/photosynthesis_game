@@ -4,9 +4,9 @@ from collections import Counter
 
 def main():
     gb = PhotosynthesisBoard()
-    assert len(gb.tiles) == 37, f"{len(gb.tiles)}"
-    assert all(len(tile) < 4 for tile in gb.tiles)
-    c = Counter([len(tile) for tile in gb.tiles])
+    assert len(gb._tiles) == 37, f"{len(gb._tiles)}"
+    assert all(len(tile) < 4 for tile in gb._tiles)
+    c = Counter([len(tile) for tile in gb._tiles])
     print(c)
     assert all(c[i] == max(1, 6 * i) for i in range(4))
 

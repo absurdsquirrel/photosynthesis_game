@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import deque
 from enum import IntEnum
+from functools import partial
 
 from hex import Hex
 from photosynthesis_board import PhotosynthesisBoard
@@ -31,7 +32,7 @@ class PhotosynthesisGame:
 
         self.board = PhotosynthesisBoard()
         self.sun_revolution_counter = 3 if not advanced else 4
-        self.can_plant_or_grow_in_shade = not advanced
+        self.can_activate_in_shade = not advanced
 
         self.scoring_tokens: list[list[int]] = [
             [20, 21, 22],
@@ -66,62 +67,69 @@ class PhotosynthesisGame:
             ])
 
     @staticmethod
-    def hex_validator(qrs: str) -> bool:
+    def hex_validator(qrs: str, legal_options: set[Hex] | None = None) -> bool:
         try:
             _hex = Hex.hex_from_str(qrs)
         except ValueError:
             return False
-        return isinstance(_hex, Hex) and len(_hex) < 4
+        return _hex in legal_options
 
-    def prompt_for_hex(self, player) -> Hex:
+    def prompt_for_hex(
+            self, player: Player,
+            legal_options: set[Hex] | None = None
+    ) -> Hex | None:
+        validator = partial(self.hex_validator, legal_options=legal_options)
         hex_prompt = f"""
 {player} specify hex coordinates: q, r, s
 """
         qrs = self.ui.prompt(
                 hex_prompt,
-                validator=self.hex_validator
+                expected=[''],  # option to cancel
+                validator=validator
         )
+        if qrs == '':
+            return None
         return Hex.hex_from_str(qrs)
 
-    def collect(self, player: Player) -> None:
+    def collect(self, player: Player, activated_tiles: set[Hex]) -> None:
         """
         Player scores points for ending the life-cycle of
         one of their tall trees. Points scored depends on the
         quality of the soil and remaining score tokens.
         """
-        tile = self.prompt_for_hex(player)
-        p, t = self.board.get_tile(tile)
-        if p is not player:
-            raise ValueError(f"{player} does not control {tile}")
-        if t != TREE.TALL:
-            raise ValueError(f"{tile} does not have a tall tree.")
+        legal_options = {
+            tile for tile, _ in
+            self.board.get_player_tiles(player, tree_range=range(3, 4))
+            if tile not in activated_tiles
+        }
+        if not legal_options:
+            self.ui.display_message("Nothing to collect.")
+            return
+        tile = self.prompt_for_hex(player, legal_options=legal_options)
+        if tile == '':  # cancel action
+            return
+        activated_tiles.add(tile)
         soil_quality = len(tile)
         while not self.scoring_tokens[soil_quality] and soil_quality < 4:
             soil_quality += 1
-        if soil_quality > 3:
-            raise ValueError("Ran out of score tokens.")
         points = self.scoring_tokens[soil_quality].pop()
         player.score += points
         self.board.set_tile(tile, None, None)
         player.recover_tree(TREE.TALL)
+        if all(len(stack) < 1 for stack in self.scoring_tokens):
+            self.ui.display_message("Out of scoring tokens.")
+            self.end_game()
 
     def buy(self, player: Player) -> None:
         ...
 
-    def plant(self, player: Player) -> None:
+    def plant(self, player: Player, activated_tiles: set[Hex]) -> None:
         ...
 
-    def grow(self, player: Player) -> None:
+    def grow(self, player: Player, activated_tiles: set[Hex]) -> None:
         ...
 
     def life_cycle(self, player: Player) -> None:
-        activated_tiles: set[Hex] = set()
-        player_tiles = self.board.get_player_tiles(player)
-        opponent_tiles = {
-            opponent.name: self.board.get_player_tiles(opponent)
-            for opponent in self.players if opponent is not player
-        }
-
         action_prompt = f"""
 {player}'s turn.
 Actions:
@@ -132,16 +140,29 @@ Actions:
     5. End Turn
 """
         expected = ['1', '2', '3', '4', '5']
+        activated_tiles: set[Hex] = set()
         player_action = self.ui.prompt(action_prompt, expected=expected)
         while player_action != '5':
             if player_action == '1':
                 self.buy(player)
             elif player_action == '2':
-                self.plant(player)
+                self.plant(player, activated_tiles)
             elif player_action == '3':
-                self.grow(player)
+                self.grow(player, activated_tiles)
             elif player_action == '4':
-                self.collect(player)
+                self.collect(player, activated_tiles)
             else:
                 break
             player_action = self.ui.prompt(action_prompt, expected=expected)
+
+    def end_game(self):
+        # players score an extra point for every 3 unused light
+        top_score = 0
+        for player in self.players:
+            player.score += player.light_points // 3
+            top_score = max(top_score, player.score)
+        winners = [player.name for player in self.players if player.score == top_score]
+        self.ui.display_message(f"""
+Winner{'s' if len(winners) > 1 else ''}: {', '.join(winners)} with {top_score} points. 
+""")
+        quit()

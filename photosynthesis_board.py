@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Iterator
+
 from gameboard import GameBoard
 from hex import HEX_DIRECTIONS, Hex
 from player import Player
@@ -27,7 +29,7 @@ class PhotosynthesisBoard(GameBoard):
             raise ValueError(f"{tile} does not have a piece on it.")
         for _ in range(3):
             tile = tile + self.sun_direction
-            if tile not in self.tiles:
+            if tile not in self._tiles:
                 # crossed edge of board
                 return False
             _, tree2 = self.get_tile(tile)
@@ -38,11 +40,11 @@ class PhotosynthesisBoard(GameBoard):
     def get_tile(
             self, tile: Hex
     ) -> tuple[Player, int] | tuple[None, None]:
-        if tile not in self.tiles:
+        if tile not in self._tiles:
             raise ValueError(f"{tile} is not on the board.")
-        if not self.tiles[tile]:
+        if not self._tiles[tile]:
             return None, None
-        return self.tiles[tile]
+        return self._tiles[tile]
 
     def set_tile(
             self,
@@ -50,15 +52,37 @@ class PhotosynthesisBoard(GameBoard):
             player: Player | None,
             tree: int | None
     ) -> None:
-        if tile not in self.tiles:
+        if tile not in self._tiles:
             raise ValueError(f"{tile} is not on the board.")
         if not player or tree is None:
-            self.tiles[tile] = None
+            self._tiles[tile] = None
         else:
-            self.tiles[tile] = (player, tree)
+            self._tiles[tile] = (player, tree)
 
-    def get_player_tiles(self, player: Player) -> list[tuple[Hex, int]]:
-        return [
-            (tile, contents[1]) for tile, contents in self.tiles
-            if contents and contents[0] is player
-        ]
+    def get_player_tiles(
+        self, player: Player, /,
+        tree_range: range = range(4),
+        not_in_shadow: bool = False
+    ) -> Iterator[tuple[Hex, int]]:
+        for tile, contents in self._tiles.items():
+            if (
+                contents and contents[0] is player and
+                contents[1] in tree_range and
+                not (not_in_shadow and self.is_in_shadow(tile))
+            ):
+                yield tile, contents[1]
+
+    def get_empty_tiles_in_range(
+            self,
+            origin: Hex,
+            tile_range: range
+    ) -> Iterator[Hex]:
+        """
+        Returns an iterator of tiles within a specified range from the origin.
+        If tile_range includes 0, the origin will be included in the list.
+        If empty_only is True, returns only empty tiles.
+        If exclude_in_shadow is True, returns only tiles that are not in shadow.
+        """
+        for tile in super().get_tiles_in_range(origin, tile_range):
+            if self._tiles[tile] is None:
+                yield tile
