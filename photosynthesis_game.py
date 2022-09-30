@@ -2,21 +2,12 @@ from __future__ import annotations
 
 from collections import deque
 from enum import IntEnum
-from functools import partial
 from typing import Iterable
 
 from hex import Hex
-from photosynthesis_board import PhotosynthesisBoard
+from photosynthesis_board import PhotosynthesisBoard, TREE
 from player import Player
 from ui import UI
-
-
-# this is probably unnecessary, but it's a helpful reference
-class TREE(IntEnum):
-    SEED = 0
-    SMALL = 1
-    MEDIUM = 2
-    TALL = 3
 
 
 class PhotosynthesisGame:
@@ -69,7 +60,7 @@ class PhotosynthesisGame:
                 legal_options = self.board.get_empty_tiles_in_range(
                     Hex(0, 0, 0), range(3, 4)
                 )
-                tile = self.prompt_for_hex(player, legal_options, cancel=None)
+                tile = self.ui.prompt_for_hex(player, legal_options, cancel=None)
                 player.use_available(TREE.SMALL)
                 self.board.set_tile(tile, player, TREE.SMALL)
 
@@ -88,32 +79,6 @@ class PhotosynthesisGame:
                 if tree and not self.board.is_in_shadow(tile)
             ])
 
-    @staticmethod
-    def hex_validator(qrs: str, legal_options: Iterable[Hex] | None = None) -> bool:
-        try:
-            _hex = Hex.hex_from_str(qrs)
-        except ValueError:
-            return False
-        return _hex in legal_options
-
-    def prompt_for_hex(
-            self, player: Player,
-            legal_options: Iterable[Hex] | None = None,
-            cancel: str | None = ''
-    ) -> Hex | None:
-        validator = partial(self.hex_validator, legal_options=legal_options)
-        hex_prompt = f"""
-{player} specify hex coordinates: q, r, s
-"""
-        qrs = self.ui.prompt(
-                hex_prompt,
-                expected=[''],  # option to cancel
-                validator=validator
-        )
-        if cancel is not None and qrs == cancel:
-            return None
-        return Hex.hex_from_str(qrs)
-
     def collect(self, player: Player, activated_tiles: set[Hex]) -> None:
         """
         Player scores points for ending the life-cycle of
@@ -128,7 +93,7 @@ class PhotosynthesisGame:
         if not legal_options:
             self.ui.display_message("Nothing to collect.")
             return
-        tile = self.prompt_for_hex(player, legal_options=legal_options)
+        tile = self.ui.prompt_for_hex(player, legal_options=legal_options)
         if tile is None:  # cancel action
             return
         activated_tiles.add(tile)
@@ -144,10 +109,57 @@ class PhotosynthesisGame:
             self.end_game()
 
     def buy(self, player: Player) -> None:
-        ...
+        legal_options = {
+            tree for tree in TREE
+            if player.trees[tree] > 0 and
+            player.price_of(tree) <= player.light_points
+        }
+        if not legal_options:
+            msg = f"{player} has no trees in stock or not enough light."
+            self.ui.display_message(msg)
+            return
+        tree = self.ui.prompt_for_tree(player, legal_options)
+        if tree is None:
+            return
+        player.buy_tree(tree)
 
     def plant(self, player: Player, activated_tiles: set[Hex]) -> None:
-        ...
+        unable = None
+        if player.available[TREE.SEED] < 1:
+            unable = f"{player} has no available seeds."
+        if player.light_points < 1:
+            unable = f"{player} has no light."
+        legal_sources = {
+            tile for tile in self.board.get_player_tiles(
+                player,
+                tree_range=range(1, 4),
+                not_in_shadow=not self.can_activate_in_shade
+            )
+            if tile not in activated_tiles
+        }
+        if not legal_sources:
+            unable = f"{player} has no trees to plant from."
+        if unable:
+            self.ui.display_message(unable)
+            return
+        source = self.ui.prompt_for_hex(player, legal_sources)
+        if source is None:
+            return
+        tree = self.board.get_tile(source)[1]
+        legal_targets = {
+            tile for tile in self.board.get_empty_tiles_in_range(
+                source, range(1, tree + 1)
+            )
+        }
+        if not legal_targets:
+            self.ui.display_message(f"No open spaces in range of that tree.")
+            return
+        target = self.ui.prompt_for_hex(player, legal_targets)
+        if target is None:
+            return
+        player.light_points -= 1
+        player.use_available(TREE.SEED)
+        self.board.set_tile(target, player, TREE.SEED)
 
     def grow(self, player: Player, activated_tiles: set[Hex]) -> None:
         ...

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Protocol, Iterable, Callable
 
+from hex import Hex
 from photosynthesis_board import PhotosynthesisBoard
 from player import Player
 
@@ -22,4 +23,15 @@ class UI(Protocol):
             expected: Iterable[str] | None = None,
             validator: Callable[[str], bool] | None = None
     ) -> str:
+        raise NotImplementedError
+
+    def prompt_for_hex(
+            self, player: Player,
+            legal_options: Iterable[Hex] | None = None,
+            cancel: str | None = ''
+    ) -> Hex | None:
+        raise NotImplementedError
+
+    def prompt_for_tree(self, player: Player,
+                        legal_options: Iterable[int]) -> int | None:
         raise NotImplementedError

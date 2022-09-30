@@ -1,10 +1,18 @@
 from __future__ import annotations
 
+from enum import IntEnum
 from typing import Iterator
 
 from gameboard import GameBoard
 from hex import HEX_DIRECTIONS, Hex
 from player import Player
+
+
+class TREE(IntEnum):
+    SEED = 0
+    SMALL = 1
+    MEDIUM = 2
+    TALL = 3
 
 
 class PhotosynthesisBoard(GameBoard):
@@ -61,26 +69,36 @@ class PhotosynthesisBoard(GameBoard):
 
     def get_player_tiles(
         self, player: Player, /,
-        tree_range: range = range(4),
+        tree_range: range = range(max(TREE) + 1),
         not_in_shadow: bool = False
-    ) -> Iterator[tuple[Hex, int]]:
-        for tile, contents in self._tiles.items():
-            if (
-                contents and contents[0] is player and
-                contents[1] in tree_range and
-                not (not_in_shadow and self.is_in_shadow(tile))
-            ):
-                yield tile, contents[1]
+    ) -> set[tuple[Hex, int]]:
+        # for tile, contents in self._tiles.items():
+        #     if (
+        #         contents and contents[0] is player and
+        #         contents[1] in tree_range and
+        #         not (not_in_shadow and self.is_in_shadow(tile))
+        #     ):
+        #         yield tile, contents[1]
+        return {
+            (tile, contents[1]) for tile, contents in self._tiles.items()
+            if contents and contents[0] is player and
+            contents[1] in tree_range and
+            not (not_in_shadow and self.is_in_shadow(tile))
+        }
 
     def get_empty_tiles_in_range(
             self,
             origin: Hex,
             tile_range: range
-    ) -> Iterator[Hex]:
+    ) -> set[Hex]:
         """
-        Returns an iterator of tiles within a specified range from the origin.
+        Returns a set of tiles within a specified range from the origin.
         If tile_range includes 0, the origin will be included in the list.
         """
-        for tile in super().get_tiles_in_range(origin, tile_range):
-            if self._tiles[tile] is None:
-                yield tile
+        # for tile in super().get_tiles_in_range(origin, tile_range):
+        #     if self._tiles[tile] is None:
+        #         yield tile
+        return {
+            tile for tile in super().get_tiles_in_range(origin, tile_range)
+            if self._tiles[tile] is None
+        }
