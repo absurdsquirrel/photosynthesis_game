@@ -23,7 +23,6 @@ class GameBoard:
                     tile = tile + hd
                     self._tiles[tile] = None
 
-    # TODO: get tiles in a range, and other ways?
     def get_tiles_in_range(self, origin: Hex, tile_range: range) -> Iterator[Hex]:
         """
         Returns an iterator of tiles within a specified range from the origin.

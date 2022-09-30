@@ -80,8 +80,6 @@ class PhotosynthesisBoard(GameBoard):
         """
         Returns an iterator of tiles within a specified range from the origin.
         If tile_range includes 0, the origin will be included in the list.
-        If empty_only is True, returns only empty tiles.
-        If exclude_in_shadow is True, returns only tiles that are not in shadow.
         """
         for tile in super().get_tiles_in_range(origin, tile_range):
             if self._tiles[tile] is None:

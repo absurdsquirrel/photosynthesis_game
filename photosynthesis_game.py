@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import deque
 from enum import IntEnum
 from functools import partial
+from typing import Iterable
 
 from hex import Hex
 from photosynthesis_board import PhotosynthesisBoard
@@ -49,7 +50,28 @@ class PhotosynthesisGame:
             Player(f"Player {i}") for i in range(1, number_of_players + 1)
         ])
 
-        # TODO: setup 2 small trees per player
+        self.play_game()
+
+    def play_game(self) -> None:
+        self.place_starting_trees()
+        while self.sun_revolution_counter > 0:
+            self.photosynthesis()
+            for player in self.players:
+                self.life_cycle(player)
+            self.advance_starting_player()
+            if self.board.advance_round():
+                self.sun_revolution_counter -= 1
+        self.end_game()
+
+    def place_starting_trees(self):
+        for _ in range(2):
+            for player in self.players:
+                legal_options = self.board.get_empty_tiles_in_range(
+                    Hex(0, 0, 0), range(3, 4)
+                )
+                tile = self.prompt_for_hex(player, legal_options, cancel=None)
+                player.use_available(TREE.SMALL)
+                self.board.set_tile(tile, player, TREE.SMALL)
 
     def advance_starting_player(self) -> None:
         """
@@ -67,7 +89,7 @@ class PhotosynthesisGame:
             ])
 
     @staticmethod
-    def hex_validator(qrs: str, legal_options: set[Hex] | None = None) -> bool:
+    def hex_validator(qrs: str, legal_options: Iterable[Hex] | None = None) -> bool:
         try:
             _hex = Hex.hex_from_str(qrs)
         except ValueError:
@@ -76,7 +98,8 @@ class PhotosynthesisGame:
 
     def prompt_for_hex(
             self, player: Player,
-            legal_options: set[Hex] | None = None
+            legal_options: Iterable[Hex] | None = None,
+            cancel: str | None = ''
     ) -> Hex | None:
         validator = partial(self.hex_validator, legal_options=legal_options)
         hex_prompt = f"""
@@ -87,7 +110,7 @@ class PhotosynthesisGame:
                 expected=[''],  # option to cancel
                 validator=validator
         )
-        if qrs == '':
+        if cancel is not None and qrs == cancel:
             return None
         return Hex.hex_from_str(qrs)
 
@@ -106,7 +129,7 @@ class PhotosynthesisGame:
             self.ui.display_message("Nothing to collect.")
             return
         tile = self.prompt_for_hex(player, legal_options=legal_options)
-        if tile == '':  # cancel action
+        if tile is None:  # cancel action
             return
         activated_tiles.add(tile)
         soil_quality = len(tile)
