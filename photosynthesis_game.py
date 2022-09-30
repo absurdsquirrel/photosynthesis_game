@@ -196,6 +196,7 @@ class PhotosynthesisGame:
         activated_tiles.add(tile)
 
     def life_cycle(self, player: Player) -> None:
+        self.ui.display_game_board(self.board)
         action_prompt = f"""
 {player}'s turn.
 Actions:

@@ -1,18 +1,27 @@
 from __future__ import annotations
 
-from typing import Iterable, Callable
+from typing import Callable
 
 from hex import Hex
 from photosynthesis_board import PhotosynthesisBoard, TREE
 from player import Player
+from asciihexprinter import HexGrid
 
 
 # see ui.UI for protocol
 # noinspection PyMethodMayBeStatic
 class CLI:
+    def __init__(self):
+        self.grid = HexGrid(3)
+
     def display_game_board(self, board: PhotosynthesisBoard) -> None:
-        # TODO: represent board
-        raise NotImplementedError
+        for tile, contents in board.tiles.items():
+            player, tree = contents if contents else None, None
+            text1 = player.name if player else ""
+            text2 = TREE(tree).name if tree else ""
+            self.grid.add_hex(tile, text1, text2)
+
+        self.grid.print()
 
     def display_player_board(self, player: Player) -> None:
         print(player.name)
@@ -56,7 +65,9 @@ class CLI:
                 return False
             return _hex in legal_options
 
+        available_hexes = [f"\n{q}, {r}, {s}" for q, r, s in legal_options]
         hex_prompt = f"""
+Options:{''.join(available_hexes)}
 {player} specify hex coordinates: q, r, s
 """
         response = self.prompt(

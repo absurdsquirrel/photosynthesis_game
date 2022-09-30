@@ -14,6 +14,13 @@ class GameBoard:
         self._tiles: dict[Hex, tuple | None] = {}
         self._generate_tiles(radius)
 
+    @property
+    def tiles(self) -> dict[Hex, tuple | None]:
+        return self._tiles.copy()
+
+    def __contains__(self, item):
+        return item in self._tiles
+
     def _generate_tiles(self, radius: int) -> None:
         for i in range(radius + 1):
             tile = Hex(-i, i, 0)

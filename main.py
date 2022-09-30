@@ -1,11 +1,8 @@
 from cli import CLI
-from player import Player
-
+from photosynthesis_game import PhotosynthesisGame
 
 def main():
-    p1 = Player("Player 1")
-    ui = CLI()
-    ui.display_player_board(p1)
+    game = PhotosynthesisGame(2, CLI())
 
 
 if __name__ == '__main__':
