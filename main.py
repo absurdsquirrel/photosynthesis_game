@@ -1,14 +1,11 @@
-from photosynthesis_game import PhotosynthesisBoard
-from collections import Counter
+from cli import CLI
+from player import Player
 
 
 def main():
-    gb = PhotosynthesisBoard()
-    assert len(gb._tiles) == 37, f"{len(gb._tiles)}"
-    assert all(len(tile) < 4 for tile in gb._tiles)
-    c = Counter([len(tile) for tile in gb._tiles])
-    print(c)
-    assert all(c[i] == max(1, 6 * i) for i in range(4))
+    p1 = Player("Player 1")
+    ui = CLI()
+    ui.display_player_board(p1)
 
 
 if __name__ == '__main__':

@@ -209,6 +209,7 @@ Actions:
         activated_tiles: set[Hex] = set()
         player_action = self.ui.prompt(action_prompt, expected=expected)
         while player_action != '5':
+            self.ui.display_game_board(self.board)
             if player_action == '1':
                 self.buy(player)
             elif player_action == '2':

@@ -8,14 +8,21 @@ from player import Player
 
 
 # see ui.UI for protocol
+# noinspection PyMethodMayBeStatic
 class CLI:
     def display_game_board(self, board: PhotosynthesisBoard) -> None:
         # TODO: represent board
         raise NotImplementedError
 
     def display_player_board(self, player: Player) -> None:
-        # TODO: represent player
-        raise NotImplementedError
+        print(player.name)
+        print(f"Score: {player.score}")
+        print(f"Light: {player.light_points}")
+        print("      \tTrees\t(cost)\tAvailable")
+        for tree in TREE:
+            print(
+                f"{tree.name}\t{player.trees[tree]}\t\t({player.price_of(tree)})\t\t{player.available[tree]}"
+            )
 
     def display_message(self, msg: str) -> None:
         print(msg)
