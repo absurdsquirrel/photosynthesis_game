@@ -65,7 +65,8 @@ class CLI:
                         legal_options: set[int]) -> int | None:
 
         legal_trees = "\n".join((
-            f"{i}. {TREE(i).name}" for i in range(4) if i in legal_options
+            f"{i}. {TREE(i).name} for {player.price_of(TREE(i))} light"
+            for i in range(4) if i in legal_options
         ))
 
         tree_prompt = f"""

@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 from collections import deque
-from enum import IntEnum
-from typing import Iterable
 
 from hex import Hex
 from photosynthesis_board import PhotosynthesisBoard, TREE
