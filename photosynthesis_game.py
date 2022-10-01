@@ -172,6 +172,8 @@ class PhotosynthesisGame:
         }
         if not available_trees:
             unable = f"{player} has no available trees or not enough light."
+            self.ui.display_message(unable)
+            return
         legal_options = {
             tile for tile, tree in self.board.get_player_tiles(
                 player,
@@ -183,7 +185,6 @@ class PhotosynthesisGame:
         }
         if not legal_options:
             unable = f"{player} has no trees that can be grown."
-        if unable:
             self.ui.display_message(unable)
             return
         tile = self.ui.prompt_for_hex(player, legal_options)
