@@ -55,9 +55,9 @@ class Hex:
         Create a hex from a string in the form 'q, r, s'
         Raises ValueError if the input is bad or is not a valid Hex
         """
-        q, r, s, *_ = qrs.strip().split(',')
-        q, r, s = int(q), int(r), int(s)
-        return Hex(q, r, s)
+        q, r, *_ = qrs.strip().split(',')
+        q, r = int(q), int(r)
+        return Hex(q, r, -q - r)
 
 
 # directions & diagonals start E/ENE of the r=0 line and go CCW

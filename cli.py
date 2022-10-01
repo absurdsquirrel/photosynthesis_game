@@ -12,16 +12,21 @@ from asciihexprinter import HexGrid
 # noinspection PyMethodMayBeStatic
 class CLI:
     def __init__(self):
-        self.grid = HexGrid(3)
+        self.grid = HexGrid(3, Hex(3, 3, -6))
+        self.board: PhotosynthesisBoard | None = None
 
     def display_game_board(self, board: PhotosynthesisBoard) -> None:
-        for tile, contents in board.tiles.items():
-            player, tree = contents if contents else None, None
+        self.board = board
+        for tile in board.tiles:
+            player, tree = board.get_tile(tile)
             text1 = player.name if player else ""
-            text2 = TREE(tree).name if tree else ""
+            text2 = TREE(tree).name if tree is not None else ""
             self.grid.add_hex(tile, text1, text2)
 
         self.grid.print()
+        # TODO: indicate sun
+        # TODO: display scoring tokens
+        # TODO: display sun revolution counter
 
     def display_player_board(self, player: Player) -> None:
         print(player.name)
@@ -65,10 +70,15 @@ class CLI:
                 return False
             return _hex in legal_options
 
-        available_hexes = [f"\n{q}, {r}, {s}" for q, r, s in legal_options]
+        for tile in legal_options:
+            _, tree = self.board.get_tile(tile)
+            text1 = f"{tile.q},{tile.r}"
+            text2 = TREE(tree).name if tree is not None else ""
+            self.grid.add_hex(tile, text1, text2, "%")
+        self.grid.print()
+        # available_hexes = [f"\n{q}, {r}, {s}" for q, r, s in legal_options]
         hex_prompt = f"""
-Options:{''.join(available_hexes)}
-{player} specify hex coordinates: q, r, s
+{player} specify hex coordinates: q, r
 """
         response = self.prompt(
             hex_prompt,

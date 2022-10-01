@@ -1,7 +1,9 @@
 from cli import CLI
 from photosynthesis_game import PhotosynthesisGame
 
+
 def main():
+    # noinspection PyTypeChecker
     game = PhotosynthesisGame(2, CLI())
 
 

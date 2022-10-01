@@ -42,6 +42,7 @@ class PhotosynthesisGame:
         self.play_game()
 
     def play_game(self) -> None:
+        self.ui.display_game_board(self.board)
         self.place_starting_trees()
         while self.sun_revolution_counter > 0:
             self.photosynthesis()
@@ -181,7 +182,7 @@ class PhotosynthesisGame:
             and tile not in activated_tiles
         }
         if not legal_options:
-            unable = f"{player} has not trees that can be grown."
+            unable = f"{player} has no trees that can be grown."
         if unable:
             self.ui.display_message(unable)
             return

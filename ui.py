@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import Protocol, Iterable, Callable
+from typing import Protocol, Iterable, Callable, runtime_checkable
 
 from hex import Hex
 from photosynthesis_board import PhotosynthesisBoard
 from player import Player
 
 
+@runtime_checkable
 class UI(Protocol):
     def display_game_board(self, board: PhotosynthesisBoard) -> None:
         raise NotImplementedError
